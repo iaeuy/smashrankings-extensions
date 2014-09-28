@@ -1,10 +1,10 @@
 import sqlite3
 import requests
-import extension
 from flask import *
+from extension import *
 from contextlib import closing
 
-DATABASE = 'playerdata.db'
+DATABASE = 'smashrankings.db'
 DEBUG = True
 SECRET_KEY = 'smash4lyfe'
 URL = 'http://garsh0p.no-ip.biz:5100/'
@@ -15,13 +15,25 @@ app.config.from_object(__name__)
 def connect_db():
     return sqlite3.connect(app.config['DATABASE'])
 
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = connect_db()
+    return db
+
+def query_db(query, args=(), one=False):
+    cur = get_db().execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
+
 def init_db():
     with closing(connect_db()) as db:
         with app.open_resource('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
-        for region in all_regions:
-            for player in all_players[region]:
-                g.db.execute('insert into playerdata (name, data) values (?, ?)', [player.name, player])
+        for region in get_all_regions():
+            for player in get_players_in_region(region):
+                db.execute('insert into playerdata (name, data) values (?, ?)', [player.name, player.id])
         db.commit()
 
 @app.before_request
@@ -36,23 +48,26 @@ def teardown_request(exeception):
 
 @app.route('/')
 def show_comparison():
-    players = [session.get('player1'), session.get('player2')]
+    players = [dict(name=session.get('player1')['name'], id=session.get('player1')['data']), \
+            dict(name=session.get('player2')['name'], id=session.get('player2')['data'])]
     return render_template('show_comparison.html', players=players)
 
 @app.route('/search', methods=['POST'])
 def search_players():
     session.pop('player1', None)
     session.pop('player2', None)
-    p1 = request.form['player1']
-    p2 = request.form['player2']
+    p1 = request.form['player1'].lower()
+    p2 = request.form['player2'].lower()
     cur = g.db.execute('select name from playerdata')
-    players = [row[0] for row in curr.fetchall()]
+    players = [row[0].lower() for row in cur.fetchall()]
     if p1 not in players or p2 not in players:
         flash('Could not find player(s)')
     else:
-        session['player1'] = p1
-        session['player2'] = p2
+        session['player1'] = query_db('select * from playerdata where name = ?', [p1], one=True)
+        session['player2'] = query_db('select * from playerdata where name = ?', [p2], one=True)
     return redirect(url_for('show_comparison'))
 
 if __name__ == '__main__':
+    with app.app_context():
+        init_db()
     app.run()
