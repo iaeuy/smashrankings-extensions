@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block body %}
+  <form action="{{ url_for('search_players') }}" method=post class=search>
+    <dl>
+      <dt>Player 1:
+      <dd><input type=text size=30 name=player1>
+      <dt>Player 2:
+      <dd><input type=text size=30 name=player2>
+      <dd><input type=submit value=Search>
+    </dl>
+  </form>
+  <ul class=players>
+  {% for player in players %}
+    <li><h2>{{ player.name }}</h2>{{ player.rank }}
+  {% else %}
+    <li><em>Unbelievable. Can't find anything</em>
+  {% endfor %}
+  </ul>
+{% endblock %}

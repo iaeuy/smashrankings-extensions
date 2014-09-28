@@ -32,11 +32,11 @@ class Player(object):
 				best_win = match
 		return best_win
 
-	def worst_loss(self):
-		return
+    def worst_loss(self):
+        return
 
-	def __str__(self):
-		return "[%s, %s, %s]" % (self.name, self.rank, self.rating)
+    def __str__(self):
+        return "[%s, %s, %s]" % (self.name, self.rank, self.rating)
 
 	def __repr__(self):
 		return "[%s, %s, %s]" % (self.name, self.rank, self.rating)
