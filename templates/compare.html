@@ -1,0 +1,15 @@
+<div class="container">
+    <table class="table table-striped">
+        <tr>
+            <td>Player 1</td>
+            <td>Player 2</td>
+        </tr>
+        {% for player in players %}
+        <tr>
+            <td>{{ player.rank }}</td>
+            <td><a href="#/{{ region }}/players/{{ player.id }}">{{ player.name }}</a></td>
+            <td>{{ player.rating | number:3 }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
