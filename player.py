@@ -55,6 +55,36 @@ class Player(object):
             return 'Player has no losses in ' + region
         return worst_loss
 
+    def head_to_head_record(self, other, region):
+        wins = 0
+        losses = 0
+        for match in self.get_matches(region):
+            if match.player2 == other.name:
+                if match.result == 'win':
+                    wins += 1
+                else:
+                    losses += 1
+        return wins, losses
+
+    def common_results(self, other, region):
+        import extension
+        p1_matches = self.get_matches(region)
+        p2_matches = other.get_matches(region)
+        common_players = []
+        results = {}
+        for match in p1_matches:
+            for p2match in p2_matches:
+                if match.player2 == p2match.player2:
+                    if match.player2 not in common_players:
+                        common_players.append(match.player2)
+        for player in common_players:
+            common_player = extension.player_by_name(player, region)
+            if isinstance(common_player, str):
+                continue
+            results[player] = self.head_to_head_record(common_player, region), \
+                                other.head_to_head_record(common_player, region)
+        return results  
+
     def __str__(self):
         return "[%s, %s, %s]" % (self.name, self.rank, self.rating)
 
