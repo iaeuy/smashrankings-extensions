@@ -1,5 +1,6 @@
 import requests
 import sys
+from match import Match
 
 class Player(object):
 
@@ -32,8 +33,22 @@ class Player(object):
                 best_win = match
         return best_win
 
-    def worst_loss(self):
-        return
+    def worst_loss(self, region):
+        import extension
+        worst_loss = None
+        worst_rank = 0
+        for match in self.get_matches(region):
+            if match.result == 'win':
+                continue
+            opponent = extension.player_by_name(match.player2, region)
+            if isinstance(opponent, str):
+                continue
+            if opponent.rank > worst_rank:
+                worst_rank = opponent.rank
+                worst_loss = match
+        if not worst_loss:
+            return 'Player has no losses in ' + region
+        return worst_loss
 
     def __str__(self):
         return "[%s, %s, %s]" % (self.name, self.rank, self.rating)
