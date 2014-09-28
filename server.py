@@ -1,10 +1,12 @@
 import sqlite3
 import requests
+import extension
 from flask import *
 from contextlib import closing
 
 DATABASE = 'playerdata.db'
 DEBUG = True
+SECRET_KEY = 'smash4lyfe'
 URL = 'http://garsh0p.no-ip.biz:5100/'
 
 app = Flask(__name__)
@@ -17,9 +19,9 @@ def init_db():
     with closing(connect_db()) as db:
         with app.open_resource('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
-        regreq = requests.get(URL + 'regions')
-        for region in regreq.json()['regions']:
-
+        for region in all_regions:
+            for player in all_players[region]:
+                g.db.execute('insert into playerdata (name, data) values (?, ?)', [player.name, player])
         db.commit()
 
 @app.before_request
@@ -39,21 +41,18 @@ def show_comparison():
 
 @app.route('/search', methods=['POST'])
 def search_players():
-    error = None
-    if request.method == 'POST':
-        cur = g.db.execute('select name from playerdata')
-        players = [row[0] for row in curr.fetchall()]
-        p1 = request.form['player1']
-        p2 = request.form['player2']
-        session.pop('player1', None)
-        session.pop('player2', None)
-        if p1 not in players or p2 not in players:
-            flash('Could not find player(s)')
-        else:
-            session['player1'] = p1
-            session['player2'] = p2
+    session.pop('player1', None)
+    session.pop('player2', None)
+    p1 = request.form['player1']
+    p2 = request.form['player2']
+    cur = g.db.execute('select name from playerdata')
+    players = [row[0] for row in curr.fetchall()]
+    if p1 not in players or p2 not in players:
+        flash('Could not find player(s)')
+    else:
+        session['player1'] = p1
+        session['player2'] = p2
     return redirect(url_for('show_comparison'))
 
 if __name__ == '__main__':
     app.run()
-
