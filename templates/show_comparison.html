@@ -6,6 +6,12 @@
       <dd><input type=text size=30 name=player1>
       <dt>Player 2:
       <dd><input type=text size=30 name=player2>
+      <dt>Region:
+      <select name=region>
+      {% for region in regions %}
+        <option value="{{ region }}">{{ region }}</option>
+      {% endfor %}
+      </select>
       <dd><input type=submit value=Search>
     </dl>
   </form>

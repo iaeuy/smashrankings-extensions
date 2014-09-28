@@ -11,6 +11,7 @@ class Player(object):
         self.rating = rating
 
     def get_matches(self, region):
+        from match import Match
         matches = []
         matches_as_dicts = requests.get('http://garsh0p.no-ip.biz:5100/' + region + 
                                         '/matches?player=' + self.id).json()['matches']
@@ -26,16 +27,10 @@ class Player(object):
         best_win = None
         best_rank = sys.maxsize
         for match in self.get_matches(region):
-            if match.result == 'lose':
-                continue
             opponent = extension.player_by_name(match.player2, region)
-            if isinstance(opponent, str):
-                continue
             if opponent.rank < best_rank:
                 best_rank = opponent.rank
                 best_win = match
-        if not best_win:
-            return 'Player has no wins in ' + region
         return best_win
 
     def worst_loss(self, region):
